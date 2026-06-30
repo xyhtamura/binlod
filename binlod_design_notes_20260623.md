@@ -2,9 +2,9 @@
 
 *Forward-looking design note, not a handover. Captures decisions from the
 June 2026 design conversation on **Binlod** (the granular generator) and the
-**Tabota** features it forces. Read alongside `tabota_handover_20260616.md` and
-`tabota_chart_model.md`. Nothing here is built yet; this is the contract that
-precedes the code.*
+**Tabota** features it forces. Read alongside `tabota_handover_20260627.md` and
+`tabota_chart_model.md`. The MVP and an editing shell are now built; this remains
+the **contract**, with build deltas flagged inline and dated (see §5a, §11a).*
 
 *Lineage note: extends the handover's §8 deferred list (granular synth,
 B-layer). The granular synth referenced there is now named **Binlod**.*
@@ -156,12 +156,26 @@ mechanism — the anchor the affect system was already depositing at.
 
 **Lens-relative meaning (the most Tabota thing here):**
 - under the **density lens** → one mound-cluster: extent = cloud footprint,
-  anchor = attractor, two shapes = crescendo-in / decrescendo-out, guaranteed
-  anchor grain = the hit.
+  anchor = attractor, two shapes = crescendo-in / decrescendo-out, optional
+  anchor grain = the hit (fired by default; a per-heap toggle — see §5a).
 - under a **pitch lens** → an accent, or a slide's arrival instant.
 Same structural feature; meaning is lens-relative.
 
 ---
+
+### 5a. Anchor grain — default, not invariant (revised 2026-06-28)
+
+The onset grain was first specified as **guaranteed** (P(onset)=1 — the pin always
+strikes). In build it became a **per-heap toggle**, `fire onset grain`, defaulting
+ON. The pin still *locates* the onset visually — a hollow ring marks it when the
+grain is suppressed — but whether a grain *sounds* there is now a DOF the author
+owns per heap.
+
+Reason: a silent onset is musically real — a cloud that swells toward an instant
+it never articulates. The guarantee was a prison; the default keeps the common
+case free without foreclosing the other. Restatement of the conservation reading:
+the anchor **coordinate** is conserved, not a grain at it. ("The common must be
+easy, but must not be a prison.")
 
 ## 6. Open composition rule (decide before writing the generator)
 
@@ -279,7 +293,7 @@ element with no chrome.
 
 ```
 MIDI file in
-  → each note-on becomes an anchor point
+  → each note-on becomes an anchor point (onset grain optional — §5a)
   → params: head length, tail length, before-shape, after-shape, density
   → integrate λ over [anchor − head, anchor + tail]
   → emit grain note-ons (carry pitch through; scatter velocity by a value
@@ -291,6 +305,39 @@ No Tabota, no pen tool, no audio. Exercises **only** the spray — the novel,
 risky part — and the exact engine everything else wraps.
 
 ---
+
+## 11a. Build deltas (2026-06-28)
+
+The MVP shipped, then grew an editing shell. What build added beyond §11's
+headless spec:
+
+- **Per-heap overrides.** Params are no longer global-only. Each heap carries a
+  sparse `ov` dict; effective value = `ov[key] ?? global`. Empty on load. The
+  side panel is **scope-swapping** ("scope is the door"): nothing selected edits
+  the global default; a selection edits those heaps' overrides; mixed values show
+  an ember marker. The global/per-heap split echoes §6's region-vs-note shape but
+  on the **param** axis (which global default vs which per-heap value), not the
+  **value-curve** axis — §6 proper (a note's internal shape vs a voice lane)
+  remains open (§12.1).
+- **Per-heap stable-id seeding.** Determinism is keyed to a stable heap id, not a
+  shared rng walk: `heapSeed(seed,id) = ((seed·2654435761) ^ (id·40503) ^
+  0x9e3779b9) >>> 0`. So add / delete / move / re-roll of one heap never reshuffles
+  another's scatter — the precondition that makes per-heap overrides and editing
+  non-destructive, and one the original walk-based bake quietly violated.
+- **Editing shell (chrome arrived).** §11 called the prototype "the real element
+  with no chrome"; it now has chrome, borrowed from the Roll on purpose:
+  select-modes (replace / include / exclude, Shift-add / Alt-remove), marquee
+  incl/excl, x/y zoom, ruler-drag scroll, undo/redo. Move is **time-only** (pitch
+  never re-homed); add snaps to **occupied pitches only**. Binlod is a supplement
+  to the Roll and a local MIDI editor, not a general MIDI editor — the chrome
+  stops at that boundary.
+- **Audition.** A Web-Audio preview (noise-burst for ch9, triangle for pitched)
+  for feel-testing the bake. Not a sink — the sinks remain file-out MIDI (and,
+  later, audio). Flagged: needs an ear.
+
+None of this touches the cores in §3–§8: one rate curve emits instants, value
+curves are sampled there, the bake is baked-and-editable. The deltas are shell
+and determinism, not model.
 
 ## 12. Open forks (next decisions, in rough order)
 

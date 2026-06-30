@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>binlod — grain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---- shared substrate: carried from Tabota Roll so Binlod docks cleanly ---- */
+  --paper:        #eaf1ec;   /* app ground, green-cyan (Tabota) */
+  --panel:        #f1ecf4;   /* toolbars, low-chroma plum */
+  --panel-2:      #e7dfee;   /* raised */
+  --edge:         #cdbcd6;   /* violet border */
+  --edge-2:       #b9cfc7;   /* teal border */
+  --ink:          #18302b;   /* dark teal text */
+  --ink-dim:      #5a6f68;
+  --ink-faint:    #8a9b93;
+  --tide:         #11897e;   /* structure / links / labels (Tabota) */
+  --ember:        #dd6b12;   /* warnings / the original strike */
+
+  /* ---- Binlod's third: the grain is husk, where the paddy (Tabota) was sage ---- */
+  --husk:         #bf8a2c;   /* the grain */
+  --husk-deep:    #8f6212;   /* the guaranteed strike */
+  --husk-soft:    #ecd9ab;   /* cloud fill */
+  --field:        #ece3d2;   /* warm canvas ground — Binlod's voice */
+  --field-line:   #d8caa8;
+
+  --mono: "IBM Plex Mono","SFMono-Regular",Menlo,monospace;
+  --display: "Fraunces",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:var(--mono); color:var(--ink); font-size:13px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, #eef4ef 0%, var(--paper) 55%),
+    var(--paper);
+  display:flex; flex-direction:column; height:100vh; overflow:hidden;
+}
+
+/* ---- header ---- */
+header{
+  display:flex; align-items:center; gap:14px; padding:10px 16px;
+  border-bottom:1px solid var(--edge); background: url("binlodtex.svg") 0 0 / 300px auto repeat   #f6f2f9cc;  backdrop-filter:blur(3px);
+  flex:0 0 auto;
+  
+  position:relative; overflow:hidden;
+}
+
+.brand{font-family:var(--display); font-weight:600; font-size:21px; letter-spacing:.2px; font-optical-sizing:auto; display:flex; align-items:baseline; gap:9px;}
+.speckle{font-family:var(--mono); font-size:15px; color:var(--husk); letter-spacing:-1px; line-height:1; transform:translateY(-1px);}
+.tagline{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint);}
+.lineage{margin-left:auto; font-size:10.5px; color:var(--ink-faint); letter-spacing:.05em;}
+.lineage b{color:var(--tide); font-weight:600;}
+
+/* ---- main split ---- */
+main{flex:1 1 auto; display:flex; min-height:0;}
+.stage{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;}
+aside{
+  flex:0 0 274px; border-left:1px solid var(--edge);
+  background:linear-gradient(180deg,#f7f4fa,var(--panel));
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+
+/* ---- toolbar ---- */
+.bar{display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--edge-2); background: #fbfaff88; flex:0 0 auto;}
+.btn{
+  font-family:var(--mono); font-size:12px; color:var(--ink);
+  background:#fbfafe; border:1px solid var(--edge); border-radius:7px; padding:6px 12px; cursor:pointer;
+}
+.btn:hover{background:#fff; border-color:var(--tide);}
+.btn.primary{background:var(--husk); border-color:var(--husk-deep); color:#2c1f06; font-weight:600;}
+.btn.primary:hover{background:#cf9a38;}
+.btn:disabled{opacity:.4; cursor:not-allowed; background:#fbfafe; border-color:var(--edge);}
+.stat{font-size:11px; color:var(--ink-dim); margin-left:auto; display:flex; gap:16px;}
+.stat b{color:var(--ink); font-weight:600;}
+.stat .grains{color:var(--husk-deep);}
+
+/* ---- canvas ---- */
+.canvas-wrap{position:relative; flex:1 1 auto; min-height:0; background:var(--field); overflow:hidden;}
+#field{display:block; width:100%; height:100%;}
+.empty{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:10px; color:var(--ink-dim); pointer-events:none; padding:24px;
+}
+.empty .glyph{font-size:30px; color:var(--husk); letter-spacing:-2px;}
+.empty h2{font-family:var(--display); font-weight:500; font-size:19px; margin:0; color:var(--ink);}
+.empty p{margin:0; font-size:12px; max-width:34ch; line-height:1.6;}
+.empty .drop{margin-top:6px; font-size:11px; color:var(--ink-faint); border:1px dashed var(--field-line); padding:8px 14px; border-radius:8px; background:#fffaf0aa;}
+.dragover .canvas-wrap{outline:2px dashed var(--husk); outline-offset:-8px;}
+
+/* ---- controls ---- */
+.group{padding:12px 14px 4px; border-bottom:1px solid var(--edge-2);}
+.group h3{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-faint); margin:0 0 10px;
+}
+.row{display:flex; align-items:center; gap:10px; margin-bottom:11px;}
+.row label{flex:0 0 64px; font-size:11px; color:var(--ink-dim);}
+.row input[type=range]{flex:1 1 auto; accent-color:var(--husk); height:18px; min-width: 0;}
+.row .val{flex:0 0 52px; text-align:right; font-size:11px; color:var(--ink); font-variant-numeric:tabular-nums;}
+.seg{display:inline-flex; border:1px solid var(--edge); border-radius:8px; overflow:hidden; background:#fbfafe; flex:1 1 auto;}
+.seg button{flex:1 1 auto; font-family:var(--mono); font-size:10.5px; color:var(--ink-dim); background:none; border:none; border-left:1px solid var(--edge); padding:5px 4px; cursor:pointer;}
+.seg button:first-child{border-left:none;}
+.seg button.on{background:var(--husk); color:#2c1f06; font-weight:600;}
+.chk{display:flex; align-items:center; gap:7px; font-size:11px; color:var(--ink-dim); cursor:pointer;}
+.chk input{accent-color:var(--husk);}
+.note{padding:10px 14px; font-size:10.5px; color:var(--ink-faint); line-height:1.6;}
+.note b{color:var(--ink-dim); font-weight:600;}
+.note code{background:#fff8; border:1px solid var(--edge-2); border-radius:3px; padding:0 4px;}
+
+footer{
+  flex:0 0 auto; padding:6px 16px; border-top:1px solid var(--edge);
+  font-size:10.5px; color:var(--ink-faint); background:#f6f2f9aa; display:flex; gap:18px; align-items:center;
+}
+footer .legend{display:flex; gap:14px; margin-left:auto; align-items:center;}
+footer .key{display:inline-flex; align-items:center; gap:5px;}
+footer .dot{width:8px; height:8px; border-radius:50%;}
+input[type=file]{display:none;}
+
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================= -->
+<!-- SVG TEXTURE SLOT                                                -->
+<!-- Default = a faint fractal speckle. Replace the contents of      -->
+<!-- <defs> (or the whole svg) with your own grain texture; anything -->
+<!-- that paints into filter id="binlodSpeckle" will tile the field. -->
+<!-- ============================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="binlodGrain" patternUnits="userSpaceOnUse" width="146.88" height="97.92">
+      <!-- paste every <path class="cls-1" …/> from binlodtex.svg here, unchanged -->
+    </pattern>
+  </defs>
+</svg>
+
+<header>
+  <div class="brand">
+    <!--<span class="speckle">⠂⠄⡀⠁⠠⢀</span>-->
+    binlod
+    <span class="tagline">grain</span>
+  </div>
+  <div class="lineage">a <b>tabota</b> generator · midi → grains → midi</div>
+</header>
+
+<main id="main">
+  <div class="stage">
+    <div class="bar">
+      <button class="btn" id="loadBtn">Load MIDI…</button>
+      <button class="btn primary" id="bakeBtn" disabled>Bake &amp; export</button>
+      <button class="btn" id="reseedBtn" disabled title="Re-roll the scatter">Re-roll</button>
+      <div class="stat">
+        <span>notes in <b id="sNotes">—</b></span>
+        <span>grains out <b class="grains" id="sGrains">—</b></span>
+        <span>span <b id="sSpan">—</b></span>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="cwrap">
+      <canvas id="field"></canvas>
+      <div class="empty" id="empty">
+        <div class="glyph">⠿⠾⠽⠻</div>
+        <h2>Each note becomes a grain heap.</h2>
+        <p>Binlod reads a MIDI file, treats every note-on as a heap's centre, and sprays a cloud of grains around it — densest where you say, on the note's own pitch. The strike always fires; the cloud is what's organic.</p>
+        <div class="drop">Drop a <b>.mid</b> file here, or use <b>Load MIDI…</b></div>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="group">
+      <h3>Spread · footprint</h3>
+      <div class="row"><label>rise</label><input type="range" id="rise" min="0" max="800" step="5" value="120"><span class="val" id="riseV">120ms</span></div>
+      <div class="row"><label>hit</label><input type="range" id="hit" min="0" max="800" step="5" value="120"><span class="val" id="hitV">120ms</span></div>
+      <div class="row" style="margin-top:-3px;"><label style="flex-basis:auto;">&nbsp;</label>
+        <label class="chk"><input type="checkbox" id="link" checked> symmetric (rise = hit)</label></div>
+    </div>
+
+    <div class="group">
+      <h3>Density · profile</h3>
+      <div class="row"><label>count</label><input type="range" id="count" min="0" max="80" step="1" value="24"><span class="val" id="countV">24</span></div>
+      <div class="row"><label>shape</label>
+        <div class="seg" id="shape">
+          <button data-v="linear">linear</button>
+          <button data-v="exp">exp</button>
+          <button data-v="gaussian" class="on">gauss</button>
+        </div></div>
+      <div class="row"><label>tightness</label><input type="range" id="curve" min="0" max="1" step="0.01" value="0.4"><span class="val" id="curveV">0.40</span></div>
+      <div class="row"><label>mode</label>
+        <div class="seg" id="mode">
+          <button data-v="attract" class="on">attract</button>
+          <button data-v="repel">repel</button>
+        </div></div>
+    </div>
+
+    <div class="group">
+      <h3>Output · per-grain</h3>
+      <div class="row"><label>length</label><input type="range" id="glen" min="5" max="300" step="5" value="40"><span class="val" id="glenV">40ms</span></div>
+      <div class="row"><label>vel jit</label><input type="range" id="vjit" min="0" max="60" step="1" value="0"><span class="val" id="vjitV">0</span></div>
+      <div class="row"><label>seed</label><input type="range" id="seed" min="1" max="999" step="1" value="1"><span class="val" id="seedV">1</span></div>
+    </div>
+
+    <div class="note">
+      <b>The pin &amp; the cloud.</b> Every heap keeps one guaranteed grain on the note-on (the ring) — that's <code>P(onset)=1</code>. The <span style="color:var(--husk-deep)">●</span> cloud is sampled, not metered, so it clumps and breathes the way hand-placed notes can't. Pitch &amp; channel pass straight through, so drums stay drums and a melody stays a melody.
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <span>baked · deterministic per seed · reproducible</span>
+  <div class="legend">
+    <span class="key"><span class="dot" style="background:var(--ember)"></span> input note-on</span>
+    <span class="key"><span class="dot" style="background:var(--husk-deep);box-shadow:0 0 0 2px #8f621255"></span> anchor (pinned)</span>
+    <span class="key"><span class="dot" style="background:var(--husk)"></span> grain</span>
+    <span class="key"><span class="dot" style="background:var(--husk-soft)"></span> density</span>
+  </div>
+</footer>
+
+<input type="file" id="fileIn" accept=".mid,.midi,audio/midi">
+
+<script>
+"use strict";
+/* ===================================================================
+   BINLOD MVP — three pure cores + a thin shell.
+   (1) smf      : minimal Standard MIDI File read / write (no deps)
+   (2) grain    : seeded, sampled grain placement  (the load-bearing math)
+   (3) render   : stipple visualisation
+   The pure parts are written to be liftable into a Node harness verbatim.
+   =================================================================== */
+
+/* ---------- (1) SMF -------------------------------------------------- */
+const smf = (() => {
+  function readVLQ(dv, p){ let v=0,b; do{ b=dv.getUint8(p++); v=(v<<7)|(b&0x7f);}while(b&0x80); return [v,p]; }
+  function writeVLQ(v){ const out=[v&0x7f]; v>>=7; while(v>0){ out.unshift((v&0x7f)|0x80); v>>=7;} return out; }
+
+  function parse(buf){
+    const dv=new DataView(buf); let p=0;
+    if(dv.getUint32(0)!==0x4d546864) throw new Error("Not a MIDI file (no MThd).");
+    const hlen=dv.getUint32(4); const format=dv.getUint16(8); const ntrk=dv.getUint16(10);
+    let division=dv.getUint16(12); p=8+hlen;
+    if(division & 0x8000) throw new Error("SMPTE time division not supported in this MVP.");
+    const ppq=division;
+    // gather raw tick-stamped tempo + note events across all tracks
+    const tempos=[{tick:0, usPerQ:500000}]; // default 120bpm
+    const raw=[]; // {tick, type, note, vel, ch}
+    for(let t=0;t<ntrk;t++){
+      if(dv.getUint32(p)!==0x4d54726b){ // skip non-track chunk defensively
+        const skip=dv.getUint32(p+4); p+=8+skip; continue;
+      }
+      const len=dv.getUint32(p+4); p+=8; const end=p+len; let tick=0, status=0;
+      while(p<end){
+        let d; [d,p]=readVLQ(dv,p); tick+=d;
+        let b=dv.getUint8(p);
+        if(b&0x80){ status=b; p++; } else { /* running status */ }
+        const hi=status&0xf0, ch=status&0x0f;
+        if(status===0xff){ // meta
+          const meta=dv.getUint8(p++); let mlen; [mlen,p]=readVLQ(dv,p);
+          if(meta===0x51 && mlen===3){ const us=(dv.getUint8(p)<<16)|(dv.getUint8(p+1)<<8)|dv.getUint8(p+2); tempos.push({tick,usPerQ:us}); }
+          p+=mlen;
+        } else if(hi===0x90 || hi===0x80){
+          const note=dv.getUint8(p), vel=dv.getUint8(p+1); p+=2;
+          const on = hi===0x90 && vel>0;
+          raw.push({tick, type:on?'on':'off', note, vel, ch});
+        } else if(hi===0xa0||hi===0xb0||hi===0xe0){ p+=2; }
+        else if(hi===0xc0||hi===0xd0){ p+=1; }
+        else if(status===0xf0||status===0xf7){ let sl;[sl,p]=readVLQ(dv,p); p+=sl; }
+        else { p++; }
+      }
+      p=end;
+    }
+    tempos.sort((a,b)=>a.tick-b.tick);
+    // tick -> seconds via tempo map
+    const segs=[]; let accSec=0;
+    for(let i=0;i<tempos.length;i++){
+      const tk=tempos[i].tick;
+      if(i>0){ accSec += (tk-tempos[i-1].tick)*(tempos[i-1].usPerQ/1e6)/ppq; }
+      segs.push({tick:tk, sec:accSec, usPerQ:tempos[i].usPerQ});
+    }
+    const tickToSec = tick => {
+      let s=segs[0]; for(const seg of segs){ if(seg.tick<=tick) s=seg; else break; }
+      return s.sec + (tick - s.tick)*(s.usPerQ/1e6)/ppq;
+    };
+    // pair note-ons with the next matching note-off
+    const open={}; const notes=[];
+    for(const e of raw){
+      const k=e.ch+":"+e.note;
+      if(e.type==='on'){ (open[k]=open[k]||[]).push(e); }
+      else { const stack=open[k]; if(stack&&stack.length){ const o=stack.shift();
+        notes.push({t:tickToSec(o.tick), dur:Math.max(0.001,tickToSec(e.tick)-tickToSec(o.tick)), note:o.note, vel:o.vel, ch:o.ch}); } }
+    }
+    // any still-open ons get a nominal length
+    for(const k in open) for(const o of open[k]) notes.push({t:tickToSec(o.tick), dur:0.05, note:o.note, vel:o.vel, ch:o.ch});
+    notes.sort((a,b)=>a.t-b.t || a.note-b.note);
+    return {ppq, format, notes, usPerQ:tempos[0].usPerQ};
+  }
+
+  // build a format-0 SMF from absolute-seconds notes
+  function build(notes, ppq, usPerQ){
+    const secToTick = s => Math.round(s*1e6/usPerQ*ppq);
+    const evs=[]; // {tick, bytes}
+    for(const n of notes){
+      const onT=secToTick(n.t), offT=secToTick(n.t+Math.max(0.002,n.dur));
+      evs.push({tick:onT, ord:1, bytes:[0x90|(n.ch&0x0f), n.note&0x7f, Math.max(1,Math.min(127,n.vel|0))]});
+      evs.push({tick:offT, ord:0, bytes:[0x80|(n.ch&0x0f), n.note&0x7f, 0]});
+    }
+    evs.sort((a,b)=> a.tick-b.tick || a.ord-b.ord);
+    const trk=[];
+    // tempo meta first
+    trk.push(...writeVLQ(0), 0xff,0x51,0x03,(usPerQ>>16)&0xff,(usPerQ>>8)&0xff,usPerQ&0xff);
+    let last=0;
+    for(const e of evs){ trk.push(...writeVLQ(e.tick-last), ...e.bytes); last=e.tick; }
+    trk.push(...writeVLQ(0), 0xff,0x2f,0x00); // end of track
+    const head=[0x4d,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,1, (ppq>>8)&0xff, ppq&0xff];
+    const tlen=trk.length;
+    const tk=[0x4d,0x54,0x72,0x6b, (tlen>>24)&0xff,(tlen>>16)&0xff,(tlen>>8)&0xff,tlen&0xff, ...trk];
+    return new Uint8Array([...head, ...tk]);
+  }
+  return {parse, build, _writeVLQ:writeVLQ};
+})();
+
+/* ---------- (2) GRAIN — the load-bearing math ------------------------ */
+const grain = (() => {
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+  // normalized density at signed pos u∈[-1,1], peak at u=0. tightness∈[0,1].
+  function densityAt(u, shape, tight, mode){
+    const a=Math.min(1,Math.abs(u)); let p;
+    if(shape==='linear'){ const e=0.5+tight*3; p=Math.pow(Math.max(0,1-a),e); }
+    else if(shape==='exp'){ const k=0.5+tight*6; p=Math.exp(-k*a); }
+    else { const s=0.6-tight*0.52; p=Math.exp(-(a*a)/(2*s*s)); } // gaussian, σ 0.6→0.08
+    if(mode==='repel') p=1-p;
+    return Math.max(0,p);
+  }
+
+  // grain times around anchor t0; footprint [t0-rise, t0+hit] (seconds).
+  // returns sorted times INCLUDING the guaranteed anchor grain at t0.
+  function heap(t0, rise, hit, count, shape, tight, mode, rng, BINS=256){
+    const edge=new Array(BINS+1), cdf=new Array(BINS+1); cdf[0]=0;
+    let prev=null;
+    for(let i=0;i<=BINS;i++){
+      const frac=i/BINS, t=t0-rise+frac*(rise+hit);
+      let u = t<t0 ? (rise>0?(t-t0)/rise:0) : (hit>0?(t-t0)/hit:0);
+      const d=densityAt(u,shape,tight,mode); edge[i]=t;
+      if(i>0) cdf[i]=cdf[i-1]+(d+prev)/2; prev=d;
+    }
+    const total=cdf[BINS]||1, times=[];
+    for(let g=0;g<count;g++){
+      const r=rng()*total; let lo=1,hi=BINS;
+      while(lo<hi){ const m=(lo+hi)>>1; if(cdf[m]<r) lo=m+1; else hi=m; }
+      const seg=(cdf[lo]-cdf[lo-1])||1, f=(r-cdf[lo-1])/seg;
+      times.push(edge[lo-1]+f*(edge[lo]-edge[lo-1]));
+    }
+    times.push(t0);            // the pin — P(onset)=1, always fires
+    times.sort((a,b)=>a-b);
+    return times;
+  }
+
+  // bake all input notes → grain notes. each grain inherits note/channel.
+  function bake(notes, P){
+    const rng=mulberry32(P.seed*2654435761>>>0);
+    const out=[]; const heaps=[];
+    notes.forEach((n,idx)=>{
+      const ts=heap(n.t, P.rise, P.hit, P.count, P.shape, P.tight, P.mode, rng);
+      heaps.push({note:n.note, ch:n.ch, t0:n.t, rise:P.rise, hit:P.hit, times:ts});
+      for(const t of ts){
+        let v=n.vel;
+        if(P.vjit>0 && t!==n.t){ v=Math.round(n.vel+(rng()*2-1)*P.vjit); }
+        out.push({t:Math.max(0,t), dur:P.glen, note:n.note, vel:Math.max(1,Math.min(127,v)), ch:n.ch, anchor:t===n.t});
+      }
+    });
+    out.sort((a,b)=>a.t-b.t);
+    return {notes:out, heaps};
+  }
+  return {mulberry32, densityAt, heap, bake};
+})();
+
+/* ---------- (3) shell + render -------------------------------------- */
+const GM_DRUM={35:"Kick 2",36:"Kick",37:"Side Stick",38:"Snare",39:"Clap",40:"Snare 2",41:"Tom Lo F",42:"Hat Cl",43:"Tom Hi F",44:"Hat Pedal",45:"Tom Lo",46:"Hat Op",47:"Tom Lo M",48:"Tom Hi M",49:"Crash",50:"Tom Hi",51:"Ride",52:"China",53:"Ride Bell",54:"Tamb",55:"Splash",56:"Cowbell",57:"Crash 2",58:"Vibraslap",59:"Ride 2",60:"Bongo Hi",61:"Bongo Lo",62:"Conga Mt",63:"Conga Op",64:"Conga Lo",69:"Cabasa",70:"Maracas",75:"Claves"};
+const NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function rowLabel(note,ch){ if(ch===9) return GM_DRUM[note]||("Drum "+note); return NOTE_NAMES[note%12]+(Math.floor(note/12)-1); }
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+const state={ src:null, ppq:480, usPerQ:500000, baked:null };
+const P = { rise:0.12, hit:0.12, count:24, shape:'gaussian', tight:0.40, mode:'attract', glen:0.040, vjit:0, seed:1 };
+
+const cv=document.getElementById('field'), ctx=cv.getContext('2d');
+const cwrap=document.getElementById('cwrap');
+
+function fit(){ const r=cwrap.getBoundingClientRect(), dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr; cv.height=r.height*dpr; cv.style.width=r.width+'px'; cv.style.height=r.height+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0); draw(); }
+addEventListener('resize',fit);
+
+function compute(){
+  if(!state.src) return;
+  state.baked = grain.bake(state.src.notes, P);
+  document.getElementById('sNotes').textContent=state.src.notes.length;
+  document.getElementById('sGrains').textContent=state.baked.notes.length;
+  const span=state.baked.notes.length? state.baked.notes[state.baked.notes.length-1].t : 0;
+  document.getElementById('sSpan').textContent=span.toFixed(2)+'s';
+  draw();
+}
+
+function draw(){
+  const W=cv.clientWidth, H=cv.clientHeight;
+  ctx.clearRect(0,0,W,H);
+  if(!state.baked){ return; }
+  const heaps=state.baked.heaps;
+  // distinct rows by note, ordered high→low (drums read top-down nicely)
+  const rowsSet=[...new Set(heaps.map(h=>h.note))].sort((a,b)=>b-a);
+  const rowIdx=new Map(rowsSet.map((n,i)=>[n,i]));
+  const GUT=92, PADT=30, PADB=14;
+  const allT=state.baked.notes;
+  const tMax=Math.max(0.5, allT.length?allT[allT.length-1].t+0.4:1);
+  const tMin=0;
+  const x = t => GUT + (t-tMin)/(tMax-tMin)*(W-GUT-16);
+  const rowH=Math.max(20, Math.min(64,(H-PADT-PADB)/Math.max(1,rowsSet.length)));
+  const yBase = i => PADT + i*rowH + rowH*0.72;
+
+  // time ruler
+  ctx.font='10px '+css('--mono'); ctx.fillStyle=css('--ink-faint'); ctx.textBaseline='alphabetic';
+  const step = tMax>8?2: tMax>3?1: tMax>1?0.5:0.25;
+  ctx.strokeStyle=css('--field-line'); ctx.lineWidth=1;
+  for(let t=0;t<=tMax;t+=step){ const px=x(t); ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(px,PADT-6); ctx.lineTo(px,H-PADB); ctx.stroke(); ctx.globalAlpha=1;
+    ctx.fillText(t.toFixed(step<1?2:0)+'s', px+3, PADT-10); }
+
+  // rows
+  for(const h of heaps){
+    const ri=rowIdx.get(h.note), yb=yBase(ri);
+    // row label + baseline
+    ctx.fillStyle=css('--ink-dim'); ctx.font='11px '+css('--mono'); ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(rowLabel(h.note,h.ch), GUT-10, yb-rowH*0.22);
+    ctx.textAlign='left';
+    ctx.strokeStyle=css('--field-line'); ctx.globalAlpha=.6; ctx.beginPath(); ctx.moveTo(GUT,yb); ctx.lineTo(W-16,yb); ctx.stroke(); ctx.globalAlpha=1;
+
+    // density envelope (continuous) — sampled silhouette of the profile
+    const x0=x(h.t0-h.rise), x1=x(h.t0+h.hit), top=rowH*0.52, SAMP=64;
+    ctx.beginPath(); ctx.moveTo(x0,yb);
+    for(let i=0;i<=SAMP;i++){ const f=i/SAMP, t=h.t0-h.rise+f*(h.rise+h.hit);
+      let u = t<h.t0 ? (h.rise>0?(t-h.t0)/h.rise:0) : (h.hit>0?(t-h.t0)/h.hit:0);
+      const d=grain.densityAt(u,P.shape,P.tight,P.mode);
+      ctx.lineTo(x(t), yb-d*top); }
+    ctx.lineTo(x1,yb); ctx.closePath();
+    ctx.fillStyle=css('--husk-soft'); ctx.globalAlpha=.55; ctx.fill(); ctx.globalAlpha=1;
+
+    // grains (discrete)
+    for(const t of h.times){
+      if(t===h.t0) continue;
+      ctx.beginPath(); ctx.arc(x(t), yb, 2.1, 0, 7); ctx.fillStyle=css('--husk'); ctx.fill();
+    }
+    // original note-on tick
+    ctx.strokeStyle=css('--ember'); ctx.lineWidth=1.4; ctx.beginPath();
+    ctx.moveTo(x(h.t0), yb-rowH*0.30); ctx.lineTo(x(h.t0), yb+4); ctx.stroke();
+    // anchor grain (pinned)
+    ctx.beginPath(); ctx.arc(x(h.t0), yb, 3.4, 0, 7); ctx.fillStyle=css('--husk-deep'); ctx.fill();
+    ctx.strokeStyle=css('--husk-deep'); ctx.globalAlpha=.4; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(x(h.t0), yb, 6, 0, 7); ctx.stroke(); ctx.globalAlpha=1;
+  }
+}
+
+/* ---------- file in/out --------------------------------------------- */
+function loadBuffer(buf, name){
+  try{
+    const s=smf.parse(buf);
+    if(!s.notes.length){ alert("No notes found in that MIDI file."); return; }
+    state.src=s; state.ppq=s.ppq; state.usPerQ=s.usPerQ; state.name=name||"input";
+    document.getElementById('empty').style.display='none';
+    document.getElementById('bakeBtn').disabled=false;
+    document.getElementById('reseedBtn').disabled=false;
+    compute();
+  }catch(e){ alert("Couldn't read that file:\n"+e.message); }
+}
+const fileIn=document.getElementById('fileIn');
+document.getElementById('loadBtn').onclick=()=>fileIn.click();
+fileIn.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const fr=new FileReader();
+  fr.onload=()=>loadBuffer(fr.result, f.name.replace(/\.midi?$/i,'')); fr.readAsArrayBuffer(f); };
+
+['dragenter','dragover'].forEach(ev=>document.getElementById('main').addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('dragover');}));
+['dragleave','drop'].forEach(ev=>document.getElementById('main').addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'||e.target===document.getElementById('main'))document.body.classList.remove('dragover');}));
+document.getElementById('main').addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(!f) return; const fr=new FileReader();
+  fr.onload=()=>loadBuffer(fr.result, f.name.replace(/\.midi?$/i,'')); fr.readAsArrayBuffer(f); });
+
+document.getElementById('bakeBtn').onclick=()=>{
+  if(!state.baked) return;
+  const bytes=smf.build(state.baked.notes, state.ppq, state.usPerQ);
+  const blob=new Blob([bytes],{type:'audio/midi'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(state.name||"binlod")+".binlod.mid"; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('reseedBtn').onclick=()=>{ P.seed=1+Math.floor(Math.random()*998);
+  const s=document.getElementById('seed'); s.value=P.seed; document.getElementById('seedV').textContent=P.seed; compute(); };
+
+/* ---------- controls ------------------------------------------------ */
+function bindRange(id, key, fmt, scale=1){
+  const el=document.getElementById(id), out=document.getElementById(id+'V');
+  el.oninput=()=>{ P[key]=parseFloat(el.value)*scale; out.textContent=fmt(parseFloat(el.value));
+    if(key==='rise'&&document.getElementById('link').checked){ document.getElementById('hit').value=el.value; document.getElementById('hitV').textContent=fmt(parseFloat(el.value)); P.hit=P.rise; }
+    if(key==='hit'&&document.getElementById('link').checked){ document.getElementById('rise').value=el.value; document.getElementById('riseV').textContent=fmt(parseFloat(el.value)); P.rise=P.hit; }
+    compute(); };
+}
+bindRange('rise','rise',v=>v+'ms',0.001);
+bindRange('hit','hit',v=>v+'ms',0.001);
+bindRange('count','count',v=>v|0);
+bindRange('curve','tight',v=>v.toFixed(2));
+bindRange('glen','glen',v=>v+'ms',0.001);
+bindRange('vjit','vjit',v=>v|0);
+bindRange('seed','seed',v=>v|0);
+document.getElementById('link').onchange=e=>{ if(e.target.checked){ document.getElementById('hit').value=document.getElementById('rise').value;
+  document.getElementById('hitV').textContent=document.getElementById('riseV').textContent; P.hit=P.rise; compute(); } };
+function bindSeg(id, key){ const seg=document.getElementById(id);
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{ seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); P[key]=b.dataset.v; compute(); }); }
+bindSeg('shape','shape'); bindSeg('mode','mode');
+
+fit();
+</script>
+</body>
+</html>
